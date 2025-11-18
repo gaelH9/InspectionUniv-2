@@ -79,9 +79,9 @@ export function ChemicalCabinetForm({
     <div>
       <div className="flex justify-center items-center mb-6 border-b pb-4">
         <div className="flex flex-col items-center">
-          <img 
-            src="./logoPng/logo.png" 
-            alt="HYGITEK" 
+          <img
+            src="/logoPng/logo.png"
+            alt="HYGITEK"
             className="h-24 object-contain mb-1"
           />
           <div className="text-sm text-gray-600 font-medium">Pole Expertise</div>
@@ -236,7 +236,7 @@ export function ChemicalCabinetForm({
           <div className="font-bold mb-2 text-gray-700 text-xs">Identification et VISA Contrôleur:</div>
           <div className="w-full h-28 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
             <img 
-              src="./logoPng/sig1.png" 
+              src="/logoPng/sig1.png" 
               alt="Signature Contrôleur" 
               className="max-h-full object-contain p-3"
             />
@@ -246,7 +246,7 @@ export function ChemicalCabinetForm({
           <div className="font-bold mb-2 text-gray-700 text-xs">Identification et VISA Maintenance:</div>
           <div className="w-full h-28 flex items-center justify-center bg-gray-50 rounded-lg border border-gray-200">
             <img 
-              src="./logoPng/sig2.png" 
+              src="/logoPng/sig2.png" 
               alt="Signature Maintenance" 
               className="max-h-full object-contain p-3"
             />

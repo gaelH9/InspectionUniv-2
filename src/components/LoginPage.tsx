@@ -25,9 +25,9 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <img 
-            src="./logoPng/logo.png" 
-            alt="HYGITEK" 
+          <img
+            src="/logoPng/logo.png"
+            alt="HYGITEK"
             className="h-24 object-contain"
           />
         </div>
