@@ -2,9 +2,6 @@ import React from 'react';
 import { Calendar, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import type { Cabinet } from '../data/cabinets';
 
-import logo from "../logo.png";
-
-
 interface ChemicalCabinetFormProps {
   selectedCabinet: Cabinet;
   selectedDate: string;
@@ -83,8 +80,8 @@ export function ChemicalCabinetForm({
       <div className="flex justify-center items-center mb-6 border-b pb-4">
         <div className="flex flex-col items-center">
           <img
-            src={logo}
-            alt="HYGITEK"
+             src="/logoPng/logo.png"
+            alt="Logo"
             className="h-24 object-contain mb-1"
           />
           <div className="text-sm text-gray-600 font-medium">Pole Expertise</div>
