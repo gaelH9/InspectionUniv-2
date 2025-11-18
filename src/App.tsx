@@ -307,8 +307,9 @@ export default function App() {
 
   const generatePDF02 = async () => {
     if (!imagesLoaded) {
-      alert('Ibnfo : Chargement des images error ...');
-     //return;
+      // désactivé
+        // alert('Ibnfo : Chargement des images error ...');
+        //return;
     }
 
     const element = document.getElementById('inspection-form');
@@ -484,30 +485,32 @@ export default function App() {
           textareaElement.parentNode?.replaceChild(div, textareaElement);
         }
 
-        // 4) Gestion spécifique de la photo upload/croppée
-const photoContainer = clonedDoc.querySelector('.photo-container');
+// 4) Gestion spécifique de la photo upload/croppée
+const photoContainer = clonedDoc.querySelector(".photo-container");
 if (photoContainer && croppedImage) {
-  const containerDiv = photoContainer as HTMLElement;
+  const containerEl = photoContainer as HTMLElement;
 
-  // Mise en forme du conteneur
-  containerDiv.style.display = "flex";
-  containerDiv.style.alignItems = "center";
-  containerDiv.style.justifyContent = "center";
-  containerDiv.style.backgroundColor = "white";
-  containerDiv.style.position = "relative";
-
-  // 👉 On applique la photo comme background-image
-  containerDiv.style.backgroundImage = `url(${croppedImage})`;
-  containerDiv.style.backgroundRepeat = "no-repeat";
-  containerDiv.style.backgroundPosition = "center";
-  containerDiv.style.backgroundSize = "contain";
-
-  // 👉 On supprime l’<img> d’origine pour éviter les bugs html2canvas
-  const img = containerDiv.querySelector("img");
-  if (img) {
-    img.remove();
+  // 🔥 On enlève TOUT le contenu (img + overlay noir + autres)
+  while (containerEl.firstChild) {
+    containerEl.removeChild(containerEl.firstChild);
   }
+
+  // On force le style du container pour l'impression
+  containerEl.style.display = "flex";
+  containerEl.style.alignItems = "center";
+  containerEl.style.justifyContent = "center";
+  containerEl.style.backgroundColor = "white";
+  containerEl.style.position = "relative";
+  containerEl.style.overflow = "hidden";
+
+  // On applique la photo comme background-image
+  containerEl.style.backgroundImage = `url(${croppedImage})`;
+  containerEl.style.backgroundRepeat = "no-repeat";
+  containerEl.style.backgroundPosition = "center";
+  containerEl.style.backgroundSize = "contain";
 }
+
+
 
         // 5) Remplacer les images logo / signatures par leur base64
         const images = clonedDoc.querySelectorAll("img");
