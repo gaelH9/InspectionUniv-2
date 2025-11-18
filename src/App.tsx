@@ -251,8 +251,8 @@ export default function App() {
 
   const generatePDF = async () => {
     if (!imagesLoaded) {
-      alert('Veuillez patienter pendant le chargement des images...');
-      return;
+      alert('Ibnfo : Chargement des images error ...');
+     //return;
     }
 
     const element = document.getElementById('inspection-form');
