@@ -305,11 +305,10 @@ export default function App() {
     setCroppedImage(null);
   };
 
-  const generatePDF02 = async () => {
+  const generatePDF = async () => {
     if (!imagesLoaded) {
-      // désactivé
-        // alert('Ibnfo : Chargement des images error ...');
-        //return;
+      alert('Ibnfo : Chargement des images error ...');
+     //return;
     }
 
     const element = document.getElementById('inspection-form');
@@ -432,149 +431,6 @@ export default function App() {
     pdf.save(fileName);
   };
 
-  const generatePDF = async () => {
-  if (!imagesLoaded) {
-    alert("Info : les images (logo / signatures) ne sont pas encore chargées. Réessaie dans quelques secondes.");
-    //return;
-  }
-
-  const element = document.getElementById("inspection-form");
-  if (!element) return;
-
-  try {
-    const canvas = await html2canvas(element, {
-      backgroundColor: "#ffffff",
-      scale: 2,
-      useCORS: true,
-      allowTaint: false,
-      logging: true,
-      imageTimeout: 0,
-      onclone: (clonedDoc) => {
-        // 1) Masquer les éléments inutiles pour le PDF
-        const calendarButtons = clonedDoc.querySelectorAll(".pdf-hide");
-        calendarButtons.forEach((button) => {
-          (button as HTMLElement).style.display = "none";
-        });
-
-        // 2) Remplacer les inputs numériques par des div statiques
-        const inputs = clonedDoc.querySelectorAll('input[type="number"]');
-        inputs.forEach((input) => {
-          const inputElement = input as HTMLInputElement;
-          const value = inputElement.value;
-          const div = document.createElement("div");
-          div.textContent = value || "0.00";
-          div.style.textAlign = "center";
-          div.style.padding = "4px";
-          inputElement.parentNode?.replaceChild(div, inputElement);
-        });
-
-        // 3) Transformer le textarea des remarques en div
-        const remarksTextarea = clonedDoc.querySelector("textarea");
-        if (remarksTextarea) {
-          const textareaElement = remarksTextarea as HTMLTextAreaElement;
-          const div = document.createElement("div");
-          div.style.whiteSpace = "pre-wrap";
-          div.style.wordBreak = "break-word";
-          div.style.width = "100%";
-          div.style.height = "100%";
-          div.style.padding = textareaElement.style.padding;
-          div.style.border = textareaElement.style.border;
-          div.style.borderRadius = textareaElement.style.borderRadius;
-          div.style.backgroundColor = textareaElement.style.backgroundColor;
-          div.textContent = textareaElement.value;
-          textareaElement.parentNode?.replaceChild(div, textareaElement);
-        }
-
-// 4) Gestion spécifique de la photo upload/croppée
-const photoContainer = clonedDoc.querySelector(".photo-container");
-if (photoContainer && croppedImage) {
-  const containerEl = photoContainer as HTMLElement;
-
-  // 🔥 On enlève TOUT le contenu (img + overlay noir + autres)
-  while (containerEl.firstChild) {
-    containerEl.removeChild(containerEl.firstChild);
-  }
-
-  // On force le style du container pour l'impression
-  containerEl.style.display = "flex";
-  containerEl.style.alignItems = "center";
-  containerEl.style.justifyContent = "center";
-  containerEl.style.backgroundColor = "white";
-  containerEl.style.position = "relative";
-  containerEl.style.overflow = "hidden";
-
-  // On applique la photo comme background-image
-  containerEl.style.backgroundImage = `url(${croppedImage})`;
-  containerEl.style.backgroundRepeat = "no-repeat";
-  containerEl.style.backgroundPosition = "center";
-  containerEl.style.backgroundSize = "contain";
-}
-
-
-
-        // 5) Remplacer les images logo / signatures par leur base64
-        const images = clonedDoc.querySelectorAll("img");
-        images.forEach((img) => {
-          const htmlImg = img as HTMLImageElement;
-          if (htmlImg.src.includes("logo.png")) {
-            htmlImg.src = logoBase64;
-          } else if (htmlImg.src.includes("sig1.png")) {
-            htmlImg.src = sig1Base64;
-          } else if (htmlImg.src.includes("sig2.png")) {
-            htmlImg.src = sig2Base64;
-          }
-          htmlImg.style.maxWidth = "100%";
-          htmlImg.style.maxHeight = "100%";
-          htmlImg.style.objectFit = "contain";
-        });
-      },
-    });
-
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    const sideWidth = 12;
-
-    pdf.setFillColor(0, 150, 214);
-    pdf.rect(0, 0, sideWidth, pdfHeight, "F");
-
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-
-    const marginLeft = 15;
-    const marginTop = 2;
-    const availableWidth = pdfWidth - sideWidth - marginLeft;
-    const availableHeight = pdfHeight - marginTop * 2;
-
-    const ratio = Math.min(
-      availableWidth / imgWidth,
-      availableHeight / imgHeight
-    );
-
-    const finalWidth = imgWidth * ratio;
-    const finalHeight = imgHeight * ratio;
-
-    const x = sideWidth + (availableWidth - finalWidth) / 2 + marginLeft / 2;
-    const y = (pdfHeight - finalHeight) / 2;
-
-    pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight);
-
-    const fileName = `${selectedCabinet.type} - ${selectedCabinet.identification} - ${selectedCabinet.establishment} - ${selectedCabinet.room} - ${selectedDate}.pdf`.replace(
-      /[/\\?%*:|"<>]/g,
-      "-"
-    );
-
-    pdf.save(fileName);
-  } catch (error) {
-    console.error("Erreur lors de la génération du PDF :", error);
-    alert("Une erreur est survenue lors de la génération du PDF.");
-  }
-};
-
-
   // 🔐 Si pas connecté → on affiche la page de login
   if (!isLoggedIn) {
     return (
@@ -588,21 +444,21 @@ if (photoContainer && croppedImage) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       {storageWarning && (
-        <div className="max-w-[1000px] mx-auto mb-2 sm:mb-4 px-2">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 sm:p-3 flex items-center gap-2 text-amber-700">
-            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span className="text-xs sm:text-sm">{storageWarning}</span>
+        <div className="max-w-[1000px] mx-auto mb-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-amber-700">
+            <AlertTriangle className="w-5 h-5" />
+            <span className="text-sm">{storageWarning}</span>
           </div>
         </div>
       )}
 
-      <div className="max-w-[1000px] mx-auto mb-2 sm:mb-4 px-2">
-        <div className="bg-white rounded-lg shadow p-2 sm:p-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+      <div className="max-w-[1000px] mx-auto mb-4">
+        <div className="bg-white rounded-lg shadow p-3">
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Établissement
               </label>
               <select
@@ -612,7 +468,7 @@ if (photoContainer && croppedImage) {
                   const newCabinet = filteredCabinets[0] || cabinets[0];
                   handleCabinetChange(newCabinet);
                 }}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Tous les établissements</option>
                 {establishments.map((establishment) => (
@@ -623,7 +479,7 @@ if (photoContainer && croppedImage) {
               </select>
             </div>
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Type d'appareil
               </label>
               <select
@@ -633,7 +489,7 @@ if (photoContainer && croppedImage) {
                   const newCabinet = filteredCabinets[0] || cabinets[0];
                   handleCabinetChange(newCabinet);
                 }}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Tous les types</option>
                 {deviceTypes.map((type) => (
@@ -645,17 +501,17 @@ if (photoContainer && croppedImage) {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <span className="text-xs sm:text-sm font-bold text-gray-700">Sélectionner un équipement:</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold text-gray-700">Sélectionner un équipement:</span>
             <div className="flex-1 relative">
               <button
                 onClick={() => setShowCabinetSelector(!showCabinetSelector)}
-                className="w-full flex items-center justify-between gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border"
+                className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border"
               >
-                <span className="text-xs sm:text-sm truncate">
+                <span className="text-sm">
                   {`${selectedCabinet.establishment} - ${selectedCabinet.room} - ${selectedCabinet.type} - ${selectedCabinet.identification}`}
                 </span>
-                <ChevronDown size={16} className="text-gray-600 flex-shrink-0" />
+                <ChevronDown size={16} className="text-gray-600" />
               </button>
               {showCabinetSelector && (
                 <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-lg shadow-xl border p-1 z-10 max-h-60 overflow-y-auto">
@@ -663,7 +519,7 @@ if (photoContainer && croppedImage) {
                     <button
                       key={index}
                       onClick={() => handleCabinetChange(cabinet)}
-                      className="w-full text-left px-2 py-1.5 hover:bg-gray-100 rounded text-xs sm:text-sm transition-colors"
+                      className="w-full text-left px-2 py-1.5 hover:bg-gray-100 rounded text-sm transition-colors"
                     >
                       {`${cabinet.establishment} - ${cabinet.room} - ${cabinet.type} - ${cabinet.identification}`}
                     </button>
@@ -673,19 +529,18 @@ if (photoContainer && croppedImage) {
             </div>
             <button
               onClick={() => setShowAddEquipmentForm(true)}
-              className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
-              <Plus size={16} className="flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-medium">Ajouter</span>
+              <Plus size={16} />
+              <span className="text-sm font-medium">Ajouter</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Responsive layout: colonne unique sur mobile, deux colonnes sur tablette+ */}
-      <div className="max-w-[1000px] mx-auto grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-2 sm:gap-4 px-2">
-        <div className="order-2 lg:order-1">
-          <div className="bg-white rounded-lg shadow p-2 sm:p-3">
+      <div className="max-w-[1000px] mx-auto grid grid-cols-[200px_1fr] gap-4">
+        <div>
+          <div className="bg-white rounded-lg shadow p-3">
             <QuickRemarks
               deviceType={
                 selectedCabinet.type === 'Sorbonne' ? 'sorbonne' :
@@ -703,17 +558,7 @@ if (photoContainer && croppedImage) {
           </div>
         </div>
 
-        {/* Wrapper responsive pour le formulaire */}
-        <div className="order-1 lg:order-2 overflow-x-auto">
-          <div
-            className="bg-white rounded-lg shadow p-3 sm:p-4 md:p-6 mx-auto"
-            id="inspection-form"
-            style={{
-              minHeight: '297mm',
-              width: '210mm',
-              maxWidth: '100%'
-            }}
-          >
+        <div className="bg-white rounded-lg shadow p-6" id="inspection-form" style={{ minHeight: '297mm', width: '210mm' }}>
           {selectedCabinet.type === 'Armoire Chimique' ? (
             <ChemicalCabinetForm
               selectedCabinet={selectedCabinet}
@@ -764,16 +609,15 @@ if (photoContainer && croppedImage) {
               Fiche PSM en cours de développement
             </div>
           ) : null}
-          </div>
         </div>
       </div>
 
-      <div className="max-w-[1000px] mx-auto mt-2 sm:mt-4 flex justify-center sm:justify-end px-2">
+      <div className="max-w-[1000px] mx-auto mt-4 flex justify-end">
         <button
           onClick={generatePDF}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg flex items-center gap-2 hover:from-blue-700 hover:to-blue-800 transition-all shadow hover:shadow-lg text-sm font-medium w-full sm:w-auto justify-center"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:from-blue-700 hover:to-blue-800 transition-all shadow hover:shadow-lg text-sm"
         >
-          <FileDown size={18} className="flex-shrink-0" />
+          <FileDown size={18} />
           Export PDF
         </button>
       </div>
