@@ -14,7 +14,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'gaelh' && password === 'Diaxens*') {
+    if (username === 'Admin' && password === 'soleil*') {
       // ✅ on marque l'utilisateur comme connecté dans localStorage
       localStorage.setItem('isAuthenticated', 'true');
       onLogin();
