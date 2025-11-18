@@ -15,7 +15,7 @@ import { loadEquipmentList, saveEquipmentList, exportEquipmentAsCabinetsTS, getS
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('11/12/24');
+  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString("fr-FR"));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [remarks, setRemarks] = useState('');
   const [showCabinetSelector, setShowCabinetSelector] = useState(false);
