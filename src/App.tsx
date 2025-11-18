@@ -262,7 +262,7 @@ export default function App() {
       backgroundColor: '#ffffff',
       scale: 2,
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       logging: true,
       imageTimeout: 0,
       onclone: (clonedDoc) => {
