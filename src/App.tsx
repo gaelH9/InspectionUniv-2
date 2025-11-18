@@ -485,27 +485,29 @@ export default function App() {
         }
 
         // 4) Gestion spécifique de la photo upload/croppée
-        const photoContainer = clonedDoc.querySelector(".photo-container");
-        if (photoContainer && croppedImage) {
-          const containerDiv = photoContainer as HTMLElement;
-          containerDiv.style.display = "flex";
-          containerDiv.style.alignItems = "center";
-          containerDiv.style.justifyContent = "center";
-          containerDiv.style.backgroundColor = "white";
-          containerDiv.style.position = "relative";
+const photoContainer = clonedDoc.querySelector('.photo-container');
+if (photoContainer && croppedImage) {
+  const containerDiv = photoContainer as HTMLElement;
 
-          // On applique la photo comme background-image
-          containerDiv.style.backgroundImage = `url(${croppedImage})`;
-          containerDiv.style.backgroundRepeat = "no-repeat";
-          containerDiv.style.backgroundPosition = "center";
-          containerDiv.style.backgroundSize = "contain";
+  // Mise en forme du conteneur
+  containerDiv.style.display = "flex";
+  containerDiv.style.alignItems = "center";
+  containerDiv.style.justifyContent = "center";
+  containerDiv.style.backgroundColor = "white";
+  containerDiv.style.position = "relative";
 
-          // On supprime l'éventuel <img> pour éviter les soucis de rendu
-          const img = photoContainer.querySelector("img");
-          if (img) {
-            img.remove();
-          }
-        }
+  // 👉 On applique la photo comme background-image
+  containerDiv.style.backgroundImage = `url(${croppedImage})`;
+  containerDiv.style.backgroundRepeat = "no-repeat";
+  containerDiv.style.backgroundPosition = "center";
+  containerDiv.style.backgroundSize = "contain";
+
+  // 👉 On supprime l’<img> d’origine pour éviter les bugs html2canvas
+  const img = containerDiv.querySelector("img");
+  if (img) {
+    img.remove();
+  }
+}
 
         // 5) Remplacer les images logo / signatures par leur base64
         const images = clonedDoc.querySelectorAll("img");
