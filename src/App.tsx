@@ -15,17 +15,9 @@ import { loadEquipmentList, saveEquipmentList, exportEquipmentAsCabinetsTS, getS
 
 export default function App() {
   const formattedDate = new Date().toLocaleDateString('fr-FR').slice(0, 8);
-
-  // 🔐 Lecture initiale depuis localStorage (persistance)
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('isAuthenticated') === 'true';
-  });
-
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   //const [selectedDate, setSelectedDate] = useState('11/12/24');
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toLocaleDateString("fr-FR")
-  );
+  const [selectedDate, setSelectedDate] = useState(formattedDate);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [remarks, setRemarks] = useState('');
   const [showCabinetSelector, setShowCabinetSelector] = useState(false);
@@ -45,8 +37,6 @@ export default function App() {
   });
   const [showCropModal, setShowCropModal] = useState(false);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
-  const [showCameraCapture, setShowCameraCapture] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [logoBase64, setLogoBase64] = useState<string>('');
   const [sig1Base64, setSig1Base64] = useState<string>('');
@@ -69,7 +59,7 @@ export default function App() {
     parois: 'conforme',
     etancheite_extraction: 'conforme',
     proprete_extraction: 'conforme',
-    test_fumigene: 'conforme',
+    test_fumigene: '',
     vitesse_air: ''
   });
 
@@ -120,60 +110,6 @@ export default function App() {
       reader.readAsDataURL(e.target.files[0]);
     }
   };
-
-  const handleCameraCapture = () => {
-    setShowCameraCapture(true);
-  };
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      console.error('Erreur accès caméra:', err);
-      alert('Impossible d\'accéder à la caméra');
-    }
-  };
-
-  const capturePhoto = () => {
-    if (!videoRef.current) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0);
-      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-
-      stopCamera();
-      setUploadedImage(imageDataUrl);
-      setShowCameraCapture(false);
-      setShowCropModal(true);
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  };
-
-  useEffect(() => {
-    if (showCameraCapture && videoRef.current) {
-      startCamera();
-    }
-    return () => {
-      stopCamera();
-    };
-  }, [showCameraCapture]);
 
   const onImageLoad = useCallback((image: HTMLImageElement) => {
     imageRef.current = image;
@@ -307,30 +243,21 @@ export default function App() {
 
   const generatePDF = async () => {
     if (!imagesLoaded) {
-      alert('Ibnfo : Chargement des images error ...');
-     //return;
+      alert('Veuillez patienter pendant le chargement des images...');
+      return;
     }
 
     const element = document.getElementById('inspection-form');
     if (!element) return;
-
+    
     const canvas = await html2canvas(element, {
       backgroundColor: '#ffffff',
       scale: 2,
       useCORS: true,
-      allowTaint: false,
+      allowTaint: true,
       logging: true,
       imageTimeout: 0,
-      scrollY: 0,
-      scrollX: 0,
-      windowHeight: element.scrollHeight,
       onclone: (clonedDoc) => {
-        const clonedElement = clonedDoc.getElementById('inspection-form');
-        if (clonedElement) {
-          clonedElement.style.minHeight = 'auto';
-          clonedElement.style.height = 'auto';
-        }
-
         const calendarButtons = clonedDoc.querySelectorAll('.pdf-hide');
         calendarButtons.forEach(button => {
           (button as HTMLElement).style.display = 'none';
@@ -344,8 +271,6 @@ export default function App() {
           div.textContent = value || '0.00';
           div.style.textAlign = 'center';
           div.style.padding = '4px';
-          div.style.border = '1px solid #d1d5db';
-          div.style.borderRadius = '0.25rem';
           inputElement.parentNode?.replaceChild(div, inputElement);
         });
 
@@ -356,12 +281,11 @@ export default function App() {
           div.style.whiteSpace = 'pre-wrap';
           div.style.wordBreak = 'break-word';
           div.style.width = '100%';
-          div.style.minHeight = '192px';
-          div.style.padding = '0.5rem';
-          div.style.border = '1px dashed #d1d5db';
-          div.style.borderRadius = '0.5rem';
-          div.style.backgroundColor = '#ffffff';
-          div.style.fontSize = '0.875rem';
+          div.style.height = '100%';
+          div.style.padding = textareaElement.style.padding;
+          div.style.border = textareaElement.style.border;
+          div.style.borderRadius = textareaElement.style.borderRadius;
+          div.style.backgroundColor = textareaElement.style.backgroundColor;
           div.textContent = textareaElement.value;
           textareaElement.parentNode?.replaceChild(div, textareaElement);
         }
@@ -369,50 +293,22 @@ export default function App() {
         const photoContainer = clonedDoc.querySelector('.photo-container');
         if (photoContainer) {
           const containerDiv = photoContainer as HTMLElement;
-
-          if (croppedImage) {
-            // Si une photo existe, on la configure correctement
-            containerDiv.style.display = 'flex';
-            containerDiv.style.alignItems = 'center';
-            containerDiv.style.justifyContent = 'center';
-            containerDiv.style.backgroundColor = '#ffffff';
-            containerDiv.style.position = 'relative';
-            containerDiv.style.overflow = 'hidden';
-            containerDiv.style.border = '1px dashed #d1d5db';
-            containerDiv.style.borderRadius = '0.5rem';
-            containerDiv.style.height = '320px';
-
-            const img = photoContainer.querySelector('img');
-            if (img) {
-              const imgElement = img as HTMLImageElement;
-              imgElement.src = croppedImage;
-              imgElement.style.display = 'block';
-              imgElement.style.position = 'relative';
-              imgElement.style.maxWidth = '100%';
-              imgElement.style.maxHeight = '100%';
-              imgElement.style.width = 'auto';
-              imgElement.style.height = 'auto';
-              imgElement.style.objectFit = 'contain';
-              imgElement.style.margin = 'auto';
-            }
-
-            // Supprimer tous les autres éléments (texte "Drop photo here", etc.)
-            const textElements = photoContainer.querySelectorAll('div:not(.w-full.h-full), p, span');
-            textElements.forEach(el => {
-              const element = el as HTMLElement;
-              if (element && !element.querySelector('img')) {
-                element.style.display = 'none';
-              }
-            });
-          } else {
-            // Si pas de photo, on nettoie complètement le conteneur
-            while (containerDiv.firstChild) {
-              containerDiv.removeChild(containerDiv.firstChild);
-            }
-            containerDiv.style.backgroundColor = '#ffffff';
-            containerDiv.style.border = '1px dashed #d1d5db';
-            containerDiv.style.borderRadius = '0.5rem';
-            containerDiv.style.height = '320px';
+          containerDiv.style.display = 'flex';
+          containerDiv.style.alignItems = 'center';
+          containerDiv.style.justifyContent = 'center';
+          containerDiv.style.backgroundColor = 'white';
+          containerDiv.style.position = 'relative';
+          
+          const img = photoContainer.querySelector('img');
+          if (img) {
+            const imgElement = img as HTMLElement;
+            imgElement.style.position = 'relative';
+            imgElement.style.maxWidth = '100%';
+            imgElement.style.maxHeight = '100%';
+            imgElement.style.width = 'auto';
+            imgElement.style.height = 'auto';
+            imgElement.style.objectFit = 'contain';
+            imgElement.style.margin = 'auto';
           }
         }
 
@@ -431,38 +327,37 @@ export default function App() {
         });
       }
     });
-
+    
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
-
+    
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-
+    
     const sideWidth = 12;
-
+    
     pdf.setFillColor(0, 150, 214);
     pdf.rect(0, 0, sideWidth, pdfHeight, 'F');
-
+    
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
-
-    const marginLeft = 14;
-    const marginTop = 5;
-    const marginBottom = 5;
-    const availableWidth = pdfWidth - sideWidth - marginLeft - 2;
-    const availableHeight = pdfHeight - marginTop - marginBottom;
-
+    
+    const marginLeft = 15;
+    const marginTop = 2;
+    const availableWidth = pdfWidth - sideWidth - marginLeft;
+    const availableHeight = pdfHeight - (marginTop * 2);
+    
     const ratio = Math.min(
       availableWidth / imgWidth,
       availableHeight / imgHeight
     );
-
+    
     const finalWidth = imgWidth * ratio;
     const finalHeight = imgHeight * ratio;
-
-    const x = sideWidth + marginLeft;
-    const y = marginTop;
-
+    
+    const x = sideWidth + ((availableWidth - finalWidth) / 2) + (marginLeft / 2);
+    const y = (pdfHeight - finalHeight) / 2;
+    
     pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
 
     const fileName = `${selectedCabinet.type} - ${selectedCabinet.identification} - ${selectedCabinet.establishment} - ${selectedCabinet.room} - ${selectedDate}.pdf`
@@ -471,34 +366,26 @@ export default function App() {
     pdf.save(fileName);
   };
 
-  // 🔐 Si pas connecté → on affiche la page de login
   if (!isLoggedIn) {
-    return (
-      <LoginPage
-        onLogin={() => {
-          localStorage.setItem('isAuthenticated', 'true'); // persistance
-          setIsLoggedIn(true);
-        }}
-      />
-    );
+    return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       {storageWarning && (
-        <div className="max-w-[1000px] mx-auto mb-2 sm:mb-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 sm:p-3 flex items-center gap-2 text-amber-700">
-            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span className="text-xs sm:text-sm">{storageWarning}</span>
+        <div className="max-w-[1000px] mx-auto mb-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2 text-amber-700">
+            <AlertTriangle className="w-5 h-5" />
+            <span className="text-sm">{storageWarning}</span>
           </div>
         </div>
       )}
 
-      <div className="max-w-[1000px] mx-auto mb-2 sm:mb-4">
-        <div className="bg-white rounded-lg shadow p-2 sm:p-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-2 sm:mb-4">
+      <div className="max-w-[1000px] mx-auto mb-4">
+        <div className="bg-white rounded-lg shadow p-3">
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Établissement
               </label>
               <select
@@ -508,7 +395,7 @@ export default function App() {
                   const newCabinet = filteredCabinets[0] || cabinets[0];
                   handleCabinetChange(newCabinet);
                 }}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Tous les établissements</option>
                 {establishments.map((establishment) => (
@@ -519,7 +406,7 @@ export default function App() {
               </select>
             </div>
             <div>
-              <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Type d'appareil
               </label>
               <select
@@ -529,7 +416,7 @@ export default function App() {
                   const newCabinet = filteredCabinets[0] || cabinets[0];
                   handleCabinetChange(newCabinet);
                 }}
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Tous les types</option>
                 {deviceTypes.map((type) => (
@@ -541,17 +428,17 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <span className="text-xs sm:text-sm font-bold text-gray-700">Sélectionner un équipement:</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-bold text-gray-700">Sélectionner un équipement:</span>
             <div className="flex-1 relative">
               <button
                 onClick={() => setShowCabinetSelector(!showCabinetSelector)}
-                className="w-full flex items-center justify-between gap-2 px-2 sm:px-3 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border"
+                className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border"
               >
-                <span className="text-xs sm:text-sm truncate">
+                <span className="text-sm">
                   {`${selectedCabinet.establishment} - ${selectedCabinet.room} - ${selectedCabinet.type} - ${selectedCabinet.identification}`}
                 </span>
-                <ChevronDown size={16} className="text-gray-600 flex-shrink-0" />
+                <ChevronDown size={16} className="text-gray-600" />
               </button>
               {showCabinetSelector && (
                 <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-lg shadow-xl border p-1 z-10 max-h-60 overflow-y-auto">
@@ -559,7 +446,7 @@ export default function App() {
                     <button
                       key={index}
                       onClick={() => handleCabinetChange(cabinet)}
-                      className="w-full text-left px-2 py-1.5 hover:bg-gray-100 rounded text-xs sm:text-sm transition-colors"
+                      className="w-full text-left px-2 py-1.5 hover:bg-gray-100 rounded text-sm transition-colors"
                     >
                       {`${cabinet.establishment} - ${cabinet.room} - ${cabinet.type} - ${cabinet.identification}`}
                     </button>
@@ -569,18 +456,18 @@ export default function App() {
             </div>
             <button
               onClick={() => setShowAddEquipmentForm(true)}
-              className="px-2 sm:px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <Plus size={16} />
-              <span className="text-xs sm:text-sm font-medium">Ajouter</span>
+              <span className="text-sm font-medium">Ajouter</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1000px] mx-auto flex flex-col lg:grid lg:grid-cols-[200px_1fr] gap-2 sm:gap-4">
-        <div className="lg:block">
-          <div className="bg-white rounded-lg shadow p-2 sm:p-3">
+      <div className="max-w-[1000px] mx-auto grid grid-cols-[200px_1fr] gap-4">
+        <div>
+          <div className="bg-white rounded-lg shadow p-3">
             <QuickRemarks
               deviceType={
                 selectedCabinet.type === 'Sorbonne' ? 'sorbonne' :
@@ -598,8 +485,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <div className="bg-white rounded-lg shadow p-3 sm:p-6 lg:p-6 min-w-[210mm]" id="inspection-form" style={{ minHeight: '297mm', width: '210mm' }}>
+        <div className="bg-white rounded-lg shadow p-6" id="inspection-form" style={{ minHeight: '297mm', width: '210mm' }}>
           {selectedCabinet.type === 'Armoire Chimique' ? (
             <ChemicalCabinetForm
               selectedCabinet={selectedCabinet}
@@ -613,7 +499,6 @@ export default function App() {
               setRemarks={setRemarks}
               croppedImage={croppedImage}
               handleImageUpload={handleImageUpload}
-              handleCameraCapture={handleCameraCapture}
             />
           ) : selectedCabinet.type === 'Sorbonne' ? (
             <SorbonneForm
@@ -628,7 +513,6 @@ export default function App() {
               setRemarks={setRemarks}
               croppedImage={croppedImage}
               handleImageUpload={handleImageUpload}
-              handleCameraCapture={handleCameraCapture}
             />
           ) : selectedCabinet.type === 'Hotte' ? (
             <HotteForm
@@ -643,23 +527,21 @@ export default function App() {
               setRemarks={setRemarks}
               croppedImage={croppedImage}
               handleImageUpload={handleImageUpload}
-              handleCameraCapture={handleCameraCapture}
             />
           ) : selectedCabinet.type === 'PSM' ? (
             <div className="flex items-center justify-center h-full text-gray-500">
               Fiche PSM en cours de développement
             </div>
           ) : null}
-          </div>
         </div>
       </div>
 
-      <div className="max-w-[1000px] mx-auto mt-2 sm:mt-4 flex justify-center sm:justify-end px-2 sm:px-0">
+      <div className="max-w-[1000px] mx-auto mt-4 flex justify-end">
         <button
           onClick={generatePDF}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:from-blue-700 hover:to-blue-800 transition-all shadow hover:shadow-lg text-xs sm:text-sm w-full sm:w-auto"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:from-blue-700 hover:to-blue-800 transition-all shadow hover:shadow-lg text-sm"
         >
-          <FileDown size={16} className="sm:w-[18px] sm:h-[18px]" />
+          <FileDown size={18} />
           Export PDF
         </button>
       </div>
@@ -674,44 +556,11 @@ export default function App() {
         </div>
       )}
 
-      {showCameraCapture && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-2 sm:mx-4 p-3 sm:p-6">
-            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-gray-800">Prendre une photo</h3>
-            <div className="max-h-[70vh] overflow-auto mb-3 sm:mb-4">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full rounded-lg"
-              />
-            </div>
-            <div className="flex justify-end gap-2 sm:gap-3">
-              <button
-                onClick={() => {
-                  stopCamera();
-                  setShowCameraCapture(false);
-                }}
-                className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-medium transition-colors"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={capturePhoto}
-                className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium transition-colors"
-              >
-                Capturer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {showCropModal && uploadedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-2 sm:mx-4 p-3 sm:p-6">
-            <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-gray-800">Recadrer l'image</h3>
-            <div className="max-h-[70vh] overflow-auto mb-3 sm:mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 p-6">
+            <h3 className="text-lg font-bold mb-4 text-gray-800">Recadrer l'image</h3>
+            <div className="max-h-[70vh] overflow-auto mb-4">
               <ReactCrop
                 crop={crop}
                 onChange={c => setCrop(c)}
@@ -726,19 +575,19 @@ export default function App() {
                 />
               </ReactCrop>
             </div>
-            <div className="flex justify-end gap-2 sm:gap-3">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
                   setShowCropModal(false);
                   setUploadedImage(null);
                 }}
-                className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-medium transition-colors"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={handleCropComplete}
-                className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
               >
                 Valider
               </button>

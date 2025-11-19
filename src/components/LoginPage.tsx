@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, User } from 'lucide-react';
 
-import logo from "../assets/images/logo.png";
+import logo from "../assets/images/logo1.png";
 
 interface LoginPageProps {
   onLogin: () => void;
