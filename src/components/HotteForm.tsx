@@ -104,7 +104,6 @@ export function HotteForm({
             alt="HYGITEK"
             className="h-24 object-contain mb-1"
           />
-          <div className="text-xs text-gray-600 font-medium">Pole Expertise</div>
         </div>
       </div>
 
