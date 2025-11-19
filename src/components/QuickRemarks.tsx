@@ -57,6 +57,8 @@ const remarksData = {
     { key: "Maintenance", "text": "Maintenance préventive recommandée pour éviter une détérioration future." }
   ],
   armoire: [
+    { key: 'FluxInfo', text: 'Flux d’air mesuré à titre indicatif : 000 m/s et 000 m³/h.' },
+    { key: 'FluxInfoI', text: 'Aucune valeur minimale normative n’est définie pour la requalification des armoires chimiques ventilées.' },
     { key: "New ID", "text": "Nouvel identifiant attribué. Une étiquette sera apposée sur l'appareil." },
     { key: 'Ventilation', text: 'Ventilation absente ou inefficace.' },
     { key: 'Séparation', text: 'Stockage non conforme des produits.' },
@@ -64,7 +66,8 @@ const remarksData = {
     { key: 'Fuites', text: 'Présence de fuites ou résidus chimiques.' },
     { key: 'Rétention', text: 'Bac de rétention manquant.' },
     { key: 'Corrosion', text: 'Traces de corrosion sur l\'armoire.' },
-    { key: 'Serrures', text: 'Serrure difficile à manipuler, maintenance requise.' }
+    { key: 'Serrures', text: 'Serrure difficile à manipuler, maintenance requise.' },
+    { key: 'Ventilation', text: 'Ventilation absente ou inefficace.' }
   ],
   psm: [
     { key: "New ID", "text": "Nouvel identifiant attribué. Une étiquette sera apposée sur l'appareil." },
