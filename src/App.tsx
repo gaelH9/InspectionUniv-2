@@ -14,7 +14,7 @@ import { AddEquipmentForm } from './components/AddEquipmentForm';
 import { loadEquipmentList, saveEquipmentList, exportEquipmentAsCabinetsTS, getStorageStatus } from './utils/storageUtils';
 
 export default function App() {
-  const formattedDate = new Date().toLocaleDateString('fr-FR').slice(0, 8);
+  const formattedDate = new Date().toLocaleDateString('fr-FR');
 
   // 🔐 Lecture initiale depuis localStorage (persistance)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
