@@ -15,7 +15,12 @@ import { loadEquipmentList, saveEquipmentList, exportEquipmentAsCabinetsTS, getS
 
 export default function App() {
   const formattedDate = new Date().toLocaleDateString('fr-FR').slice(0, 8);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 🔐 Lecture initiale depuis localStorage (persistance)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('isAuthenticated') === 'true';
+  });
   //const [selectedDate, setSelectedDate] = useState('11/12/24');
   const [selectedDate, setSelectedDate] = useState(formattedDate);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -404,8 +409,16 @@ export default function App() {
     pdf.save(fileName);
   };
 
+  // 🔐 Si pas connecté → on affiche la page de login
   if (!isLoggedIn) {
-    return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
+    return (
+      <LoginPage
+        onLogin={() => {
+          localStorage.setItem('isAuthenticated', 'true'); // persistance
+          setIsLoggedIn(true);
+        }}
+      />
+    );
   }
 
   return (
